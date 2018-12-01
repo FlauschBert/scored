@@ -1,0 +1,9 @@
+[package]
+name = "scored"
+version = "0.1.0"
+authors = ["Andreas Kutscheid <andreas@flauschhaus.org>"]
+
+[dependencies]
+rayon = "1.0.3"
+#tweetnacl = "0.2.1"
+#rusqlite = "0.15.0"
