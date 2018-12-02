@@ -5,6 +5,8 @@ version = "0.1.0"
 authors = ["Andreas Kutscheid <andreas@flauschhaus.org>"]
 
 [dependencies]
+log = "0.4.6"
+simple-logging = "2.0.1"
 threadpool = "1.7.1"
 #tweetnacl = "0.2.1"
 #rusqlite = "0.15.0"
