@@ -8,6 +8,7 @@ use log::LevelFilter;
 
 use threadpool::ThreadPool;
 
+use std::process;
 use std::io::prelude::*;
 use std::net::TcpListener;
 use std::net::TcpStream;
@@ -39,41 +40,92 @@ fn handle_connection (mut stream: TcpStream)
   stream.flush ().unwrap ();
 }
 
-fn activate_logging (log_file: &String)
+fn activate_logging (log_file: &String, log_level: LevelFilter)
 {
-  match simple_logging::log_to_file (log_file, LevelFilter::Info)
+  match simple_logging::log_to_file (log_file, log_level)
   {
-    Ok (_) => info! ("Activated logging to {}", log_file),
-    Err (_) => {
-      simple_logging::log_to_stderr (LevelFilter::Info);
-      warn! ("Could not log to {}. Logging to stderr instead.", log_file);
+    Ok (_) => info! ("Activated logging to {}.", log_file),
+    Err (err) => {
+      simple_logging::log_to_stderr (log_level);
+      warn! ("Could not log to {}. Error: {}.", err, log_file);
+      info! ("Logging to stderr instead.");
+    }
+  };
+}
+
+fn bind_to (ip_address: &String, port: i32) -> Result<TcpListener,i32>
+{
+  let dst = format! ("{}:{}", ip_address, port);
+  return match TcpListener::bind (&dst)
+  {
+    Ok (listener) => {
+      info! ("Bound to {}.", dst);
+      Ok (listener)
     },
+    Err (err) => {
+      error! ("Could not bind to {}: {}.", dst, err);
+      Err(1)
+    }
+  };
+}
+
+fn peer_address (stream : &TcpStream) -> String
+{
+  return match stream.peer_addr () 
+  {
+    Ok (addr) => format! ("{}", addr),
+    Err (_) => String::from ("unknown")
   };
 }
 
 fn main ()
 {
-  let max_threads = 10;
-  let ip = "127.0.0.1";
+  let max_threads = 4;
+  let max_queue_depth = 10;
+  let ip = String::from ("127.0.0.1");
   let port = 7878;
   let log_file = String::from ("scored.log");
+  let log_level = LevelFilter::Info;
 
-  activate_logging (&log_file);
+  activate_logging (&log_file, log_level);
 
-  info! ("Starting scored with thread pool size {}", max_threads);
+  info! ("Starting scored with thread pool size {}.", max_threads);
+
+  // Bind to address and port
+  // Exit on error
+  let listener = match bind_to (&ip, port)
+  {
+    Ok (listener) => listener,
+    Err (error_code) => process::exit (error_code)
+  };
 
   let pool = ThreadPool::new (max_threads);
-
-  let dst = format! ("{}:{}", ip, port);
-  let listener = TcpListener::bind (dst).unwrap ();
   for stream in listener.incoming ()
   {
-    let stream = stream.unwrap ();
-    let count = pool.queued_count ();
-    println! ("Queue: {}", count);
-    if count > 1 {
+    // Check stream for error
+    // Drop on error
+    let stream = match stream
+    {
+      Ok (stream) => stream,
+      Err (err) => {
+        warn! ("Stream error: {}. Ignoring ...", err);
+        continue;
+      }
+    };
+
+    let peer_address = peer_address (&stream);
+
+    // Queue up to max queue depth: Drop if depth too deep
+    let queued_count = pool.queued_count ();
+    if queued_count > max_queue_depth
+    {
+      warn! ("Too many streams queued: {}. Dropping peer {}...",
+        queued_count, peer_address
+      );
       continue;
     }
+
+    info! ("Processing incoming stream of peer {}.", peer_address);
 
     pool.execute (|| {
       handle_connection (stream);
