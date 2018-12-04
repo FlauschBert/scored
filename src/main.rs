@@ -1,10 +1,10 @@
 extern crate threadpool;
 extern crate log;
-extern crate simple_logging;
+extern crate flexi_logger;
 
 // logging
 use log::{info, warn, error};
-use log::LevelFilter;
+use flexi_logger::{Logger,opt_format};
 
 use threadpool::ThreadPool;
 
@@ -40,14 +40,21 @@ fn handle_connection (mut stream: TcpStream)
   stream.flush ().unwrap ();
 }
 
-fn activate_logging (log_file: &String, log_level: LevelFilter)
+fn activate_logging ()
 {
-  match simple_logging::log_to_file (log_file, log_level)
+  match Logger::with_env_or_str ("info")
+               .log_to_file ()
+               .rotate_over_size (10000)
+               .append ()
+               .format (opt_format)
+               .start ()
   {
-    Ok (_) => info! ("Activated logging to {}.", log_file),
+    Ok (_) => info! ("Activated logging to file."),
     Err (err) => {
-      simple_logging::log_to_stderr (log_level);
-      warn! ("Could not log to {}. Error: {}.", err, log_file);
+      Logger::with_env_or_str ("info")
+             .format (opt_format)
+             .start ().unwrap ();
+      warn! ("Could not log to file: {}.", err);
       info! ("Logging to stderr instead.");
     }
   };
@@ -84,10 +91,8 @@ fn main ()
   let max_queue_depth = 10;
   let ip = String::from ("127.0.0.1");
   let port = 7878;
-  let log_file = String::from ("scored.log");
-  let log_level = LevelFilter::Info;
 
-  activate_logging (&log_file, log_level);
+  activate_logging ();
 
   info! ("Starting scored with thread pool size {}.", max_threads);
 
