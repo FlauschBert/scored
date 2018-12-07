@@ -1,8 +1,8 @@
 [package]
-
 name = "scored"
 version = "0.1.0"
 authors = ["Andreas Kutscheid <andreas@flauschhaus.org>"]
+edition = "2018"
 
 [dependencies]
 log = "0.4.6"
