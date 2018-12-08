@@ -12,9 +12,9 @@ In the game client high scores can be managed with a library or crate **libscore
 The idea came to me while is was thinking about high scores for my little games (still in development) and when I stumbled upon TweetNaCl: https://tweetnacl.cr.yp.to/index.html. It is a minimalist and safe cryptographic library and delivers all needed functionality for this project. The other thing was that I wanted to use the programming language Rust. The language is known to ensure that the compiled program is free of data races. Good for the stability of the server.
 
 # Notation
-`|` is simply a separator and not an optional.
-`u8` or `u32` is one of these datatypes sent.
-`u8x` is several of these datatypes sent.
+`|` is simply a separator and not an optional.  
+`u8` or `u32` is one of these datatypes sent.  
+`u8x` is several of these datatypes sent.  
 
 # Communication between command line tool and server
 Before high scores can be managed games have to be added to the server's database.  
