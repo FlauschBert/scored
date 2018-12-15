@@ -127,7 +127,7 @@ This has to be done with the `SCOR10` command:
 `SCOR10|\`  
 `u8x:<512 bit hash of user token>|\`  
 `u8x:<512 bit hash of game token>|\`  
-`u64:<high score>`.
+`u64:<high score>`.  
 High score is interpreted as number or duration in seconds.
 
 #### Data handling on the server
