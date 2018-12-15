@@ -1,3 +1,5 @@
+# STATUS: Writing Specification. See below.
+
 # Scored - a minimalist and safe high score server
 
 # Motivation
