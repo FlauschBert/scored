@@ -1,17 +1,17 @@
 # STATUS: Writing Specification. See below.
 
-# Scored - a minimalist and safe high score server
+# Scored - a minimalist and safe high-score server
 
 # Motivation
-So what is this all about? Did you ever want to safely manage high score of a game for all users? On the one hand saving the score and on the other hand showing the high score to everyone. So this is it.
+So what is this all about? Did you ever want to safely manage high-score of a game for all users? On the one hand saving the score and on the other hand showing the high-score to everyone. So this is it.
 
 # Overview
-This project consists of the server **scored**, a daemon or service. High score can be saved via data stream. Retrieved via data stream or html. User authentication via login, password and token is supported.  
+This project consists of the server **scored**, a daemon or service. High-score can be saved via data stream. Retrieved via data stream or html. User authentication via login, password and token is supported.  
 Games can be managed via **command line tool**. It connects locally to the server.  
-In the game client high score can be managed with a library or crate named **libscored**.
+In the game client high-score can be managed with a library or crate named **libscored**.
 
-# Used cryptographic library'n'stuff
-The idea came to me while I was thinking about high score for my little games (still in development) and when I stumbled upon TweetNaCl: https://tweetnacl.cr.yp.to/index.html. It is a minimalist and safe cryptographic library and delivers all needed functionality for this project. The other thing was that I wanted to use the programming language Rust. The language is known to ensure at compile time that the compiled program is free of memory leaks and data races. Good for the stability of the server.
+# Used cryptographic library'n'f
+The idea came to me while I was thinking about high-score for my little games (still in development) and when I stumbled upon TweetNaCl: https://tweetnacl.cr.yp.to/index.html. It is a minimalist and safe cryptographic library and delivers all needed functionality for this project. The other thing was that I wanted to use the programming language Rust. The language is known to ensure at compile time that the compiled program is free of memory leaks and data races. Good for the stability of the server.
 
 # Notation
 `|` is simply a separator and not an optional.  
@@ -20,16 +20,16 @@ The idea came to me while I was thinking about high score for my little games (s
 `\` should be in the same line but didn't fit
 
 # Communication between command line tool and server
-Before high score can be managed, games have to be added to the server's database.  
+Before high-score can be managed, games have to be added to the server's database.  
 All communication between the two is done via TCP/IP. The information is sent locally and unencrypted over the IP address 127.0.0.1.
 
 ## Managing games with the command line tool
 ### Add a game
 This has to be done with the `GAME10` command:  
-`GAME10|u8:<highscore_type>|u8:<length in bytes>|u8x:<game_name>|u32:<max_number_of_entries>`.  
+`GAME10|u8:<high-score_type>|u8:<length in bytes>|u8x:<game_name>|u32:<max_number_of_entries>`.  
 It returns a token referencing the added (or existing) game:  
 `TOKN10|u8x:<512 bit hash of token>`.  
-It adds a unique game entry into the game table of the server's database. The entry consists of name of the game, type of high score (number: `0` or `1`, time: `2` or `3`; see [Managing high score information](https://github.com/FlauschBert/scored#managing-high-score-information)), generated token, name of the table holding the high score information per user, maximum number of entries (`0` means unlimited) and time of creation. The table name is in the form `u32:<table_number>|-|<u8x:first 16 bytes of game_name padded with #>`. The timestamp is in the form `YYYY-MM-DD HH:MM:SS`.  
+It adds a unique game entry into the game table of the server's database. The entry consists of name of the game, type of high-score (number: `0` or `1`, time: `2` or `3`; see [Managing high-score information](https://github.com/FlauschBert/scored#managing-high-score-information)), generated token, name of the table holding the high-score information per user, maximum number of entries (`0` means unlimited) and time of creation. The table name is in the form `u32:<table_number>|-|<u8x:first 16 bytes of game_name padded with #>`. The timestamp is in the form `YYYY-MM-DD HH:MM:SS`.  
 The maximum length of the name of the game is 256 bytes. Longer names are cut off.  
 Be aware that using `0` for the number of maximum entries is dangerous because the database can overflow and block the server machine.
 
@@ -50,7 +50,7 @@ The number of all game entries first:
 `u32:<number_of_games>|\`  
 For each game entry:  
 `u8x:<512 bit hash of token>|\`  
-`u8:<highscore_type>|\`  
+`u8:<high-score_type>|\`  
 `u8:<length in bytes>|u8x:<game_name>|\`  
 `u32:<table_number>|u8x:<16 chars of game table name>|\`  
 `u32:<max_number_of_entries>|\`  
@@ -68,7 +68,7 @@ If a malformed command is sent to the server the error is returned:
 ## Client authentication
 ### User and password
 #### Initial authentication and token generation
-Before any high score information can be sent to the server the client has to authenticate with user and password.  
+Before any high-score information can be sent to the server the client has to authenticate with user and password.  
 This has to be done with the `AUTH10` command followed by username and hashed password:  
 `AUTH10|u8x:<512 bit hash of password>|u8:<length in bytes>|u8x:<username>`.
 
@@ -111,7 +111,7 @@ Error timeout underrun: `STAT10|002`.
 Error timeout exceeded: `STAT10|003`.
 
 #### Changing the username
-This is not allowed. The user with high score has to stay the same all the time (in an optimum way). Authenticated user and username are exactly the same and are shown in the list of high score as is. The encoding of the username has to be UTF-8.
+This is not allowed. The user with high-score has to stay the same all the time (in an optimum way). Authenticated user and username are exactly the same and are shown in the list of high-score as is. The encoding of the username has to be UTF-8.
 
 #### Token lifetime
 Each token generated for username and hashed password combination has a fixed lifetime of 10 minutes. After this time a new token needs to be retrieved from the server with the `AUTH10` command.
@@ -119,18 +119,18 @@ Each token generated for username and hashed password combination has a fixed li
 #### Data handling on the server
 The server saves both username and password hash in a user table along with the generated token as primary key. Additionally IP address and two timestamps are saved. The first timestamp is updated for new authentication, token retrieval and password change. The second one marks the lifetime of the generated token.
 
-## Managing high score information
-High score information can be duration in seconds or a number. Best can be either shortest duration (encoded as `2`) or lowest number (encoded as `0`) or longest duration (encoded as `3`) or highest number (encoded as `1`). This is encoded in the type of high score of the game. See [Add a game](https://github.com/FlauschBert/scored#add-a-game).
+## Managing high-score information
+High-score information can be duration in seconds or a number. Best can be either shortest duration (encoded as `2`) or lowest number (encoded as `0`) or longest duration (encoded as `3`) or highest number (encoded as `1`). This is encoded in the type of high-score of the game. See [Add a game](https://github.com/FlauschBert/scored#add-a-game).
 
-### Add or update high score information
+### Add or update high-score information
 
 #### Command
 This has to be done with the `SCOR10` command:  
 `SCOR10|\`  
 `u8x:<512 bit hash of user token>|\`  
 `u8x:<512 bit hash of game token>|\`  
-`u64:<high score>`.  
-High score is interpreted as number or duration in seconds.
+`u64:<high-score>`.  
+High-score is interpreted as number or duration in seconds.
 
 #### Data handling on the server
-Saved are the username with high score and timestamp of submission.
+Saved are the username with high-score and timestamp of submission.
