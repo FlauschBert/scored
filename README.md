@@ -1,15 +1,15 @@
 # Scored - a minimalist and safe high score server
 
 # Motivation
-So what is this all about? Did you ever want to safely manage high scores (or similar information) of a game for all users? On the one hand saving the score and on the other hand showing the score to everyone. So this is it.
+So what is this all about? Did you ever want to safely manage high score of a game for all users? On the one hand saving the score and on the other hand showing the high score to everyone. So this is it.
 
 # Overview
-This project consists of the server **scored**, a daemon or service. High scores can be saved via data stream. Retrieved via data stream or html. User authentication via login, password and token is supported.  
-Games can be managed via **command line tool** which connects locally to the server.  
-In the game client high scores can be managed with a library or crate **libscored**.
+This project consists of the server **scored**, a daemon or service. High score can be saved via data stream. Retrieved via data stream or html. User authentication via login, password and token is supported.  
+Games can be managed via **command line tool**. It connects locally to the server.  
+In the game client high score can be managed with a library or crate named **libscored**.
 
 # Used cryptographic library'n'stuff
-The idea came to me while is was thinking about high scores for my little games (still in development) and when I stumbled upon TweetNaCl: https://tweetnacl.cr.yp.to/index.html. It is a minimalist and safe cryptographic library and delivers all needed functionality for this project. The other thing was that I wanted to use the programming language Rust. The language is known to ensure that the compiled program is free of memory leaks and data races. Good for the stability of the server.
+The idea came to me while I was thinking about high score for my little games (still in development) and when I stumbled upon TweetNaCl: https://tweetnacl.cr.yp.to/index.html. It is a minimalist and safe cryptographic library and delivers all needed functionality for this project. The other thing was that I wanted to use the programming language Rust. The language is known to ensure at compile time that the compiled program is free of memory leaks and data races. Good for the stability of the server.
 
 # Notation
 `|` is simply a separator and not an optional.  
@@ -18,7 +18,7 @@ The idea came to me while is was thinking about high scores for my little games 
 `\` should be in the same line but didn't fit
 
 # Communication between command line tool and server
-Before high scores can be managed, games have to be added to the server's database.  
+Before high score can be managed, games have to be added to the server's database.  
 All communication between the two is done via TCP/IP. The information is sent locally and unencrypted over the IP address 127.0.0.1.
 
 ## Managing games with the command line tool
@@ -109,7 +109,7 @@ Error timeout underrun: `STAT10|002`.
 Error timeout exceeded: `STAT10|003`.
 
 #### Changing the username
-This is not allowed. The user with high scores has to stay the same all the time (in an optimum way). Authenticated user and username are exactly the same and are shown in the list of high scores as is. The encoding of the username has to be UTF-8.
+This is not allowed. The user with high score has to stay the same all the time (in an optimum way). Authenticated user and username are exactly the same and are shown in the list of high score as is. The encoding of the username has to be UTF-8.
 
 #### Token lifetime
 Each token generated for username and hashed password combination has a fixed lifetime of 10 minutes. After this time a new token needs to be retrieved from the server with the `AUTH10` command.
@@ -118,7 +118,7 @@ Each token generated for username and hashed password combination has a fixed li
 The server saves both username and password hash in a user table along with the generated token as primary key. Additionally IP address and two timestamps are saved. The first timestamp is updated for new authentication, token retrieval and password change. The second one marks the lifetime of the generated token.
 
 ## Managing high score information
-High score information can be duration in seconds or a number. Best can be either shortest duration (encoded as `2`) or lowest number (encoded as `0`) or longest duration (encoded as `3`) or highest number (encoded as `1`). This is encoded in the type of high score of the game.
+High score information can be duration in seconds or a number. Best can be either shortest duration (encoded as `2`) or lowest number (encoded as `0`) or longest duration (encoded as `3`) or highest number (encoded as `1`). This is encoded in the type of high score of the game. See [Add a game](https://github.com/FlauschBert/scored#add-a-game).
 
 ### Add or update high score information
 
