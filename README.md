@@ -27,7 +27,7 @@ This has to be done with the `GAME10` command:
 `GAME10|u8:<highscore_type>|u8:<length in bytes>|u8x:<game_name>|u32:<max_number_of_entries>`.  
 It returns a token referencing the added (or existing) game:  
 `TOKN10|u8x:<512 bit hash of token>`.  
-It adds a unique game entry into the game table of the server's database. The entry consists of name of the game, type of high score (number: `0` or time: `1`), generated token, name of the table holding the high score information per user, maximum number of entries (`0` means unlimited) and time of creation. The table name is in the form `u32:<table_number>|-|<u8x:first 16 bytes of game_name padded with #>`. The timestamp is in the form `YYYY-MM-DD HH:MM:SS`.  
+It adds a unique game entry into the game table of the server's database. The entry consists of name of the game, type of high score (number: `0` or `1`, time: `2` or `3`; see [Managing high score information](https://github.com/FlauschBert/scored#managing-high-score-information)), generated token, name of the table holding the high score information per user, maximum number of entries (`0` means unlimited) and time of creation. The table name is in the form `u32:<table_number>|-|<u8x:first 16 bytes of game_name padded with #>`. The timestamp is in the form `YYYY-MM-DD HH:MM:SS`.  
 The maximum length of the name of the game is 256 bytes. Longer names are cut off.  
 Be aware that using `0` for the number of maximum entries is dangerous because the database can overflow and block the server machine.
 
@@ -57,7 +57,7 @@ If the number of games is `0` the stream ends with this information.
 For description of each entry see [Add a game](https://github.com/FlauschBert/scored#add-a-game).  
 
 # Communication between client and server
-All communication between the two is done via TCP/IP. The information (commands) has to be sent symmetrically encrypted with a secret session key negotiated with Diffie-Hellmann key exchange which is also part of the TweetNaCl library.
+All communication between the two is done via TCP/IP. The information (commands) are sent symmetrically encrypted with a secret session key. This session key is negotiated with Diffie-Hellmann key exchange. All algorithms are part of the TweetNaCl library.
 
 ## Malformed commands
 If a malformed command is sent to the server the error is returned:  
@@ -118,4 +118,17 @@ Each token generated for username and hashed password combination has a fixed li
 The server saves both username and password hash in a user table along with the generated token as primary key. Additionally IP address and two timestamps are saved. The first timestamp is updated for new authentication, token retrieval and password change. The second one marks the lifetime of the generated token.
 
 ## Managing high score information
+High score information can be duration in seconds or a number. Best can be either shortest duration (encoded as `2`) or lowest number (encoded as `0`) or longest duration (encoded as `3`) or highest number (encoded as `1`). This is encoded in the type of high score of the game.
 
+### Add or update high score information
+
+#### Command
+This has to be done with the `SCOR10` command:  
+`SCOR10|\`  
+`u8x:<512 bit hash of user token>|\`  
+`u8x:<512 bit hash of game token>|\`  
+`u64:<high score>`.
+High score is interpreted as number or duration in seconds.
+
+#### Data handling on the server
+Saved are the username with high score and timestamp of submission.
