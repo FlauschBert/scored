@@ -8,26 +8,28 @@ This project consists of the server **scored**, a daemon or service. High scores
 Games can be managed via **command line tool** which connects locally to the server.  
 In the game client high scores can be managed with a library or crate **libscored**.
 
-# Used cryptographic library and stuff
+# Used cryptographic library'n'stuff
 The idea came to me while is was thinking about high scores for my little games (still in development) and when I stumbled upon TweetNaCl: https://tweetnacl.cr.yp.to/index.html. It is a minimalist and safe cryptographic library and delivers all needed functionality for this project. The other thing was that I wanted to use the programming language Rust. The language is known to ensure that the compiled program is free of data races. Good for the stability of the server.
 
 # Notation
 `|` is simply a separator and not an optional.  
 `u8` or `u32` is one of these datatypes sent.  
 `u8x` is several of these datatypes sent.  
+`\` should be in the same line but didn't fit
 
 # Communication between command line tool and server
-Before high scores can be managed games have to be added to the server's database.  
-All communication between the two is done via TCP/IP. The information is sent not encrypted and locally over the IP address 127.0.0.1.
+Before high scores can be managed, games have to be added to the server's database.  
+All communication between the two is done via TCP/IP. The information is sent locally and unencrypted over the IP address 127.0.0.1.
 
 ## Managing games with the command line tool
 ### Add a game
 This has to be done with the `GAME10` command:  
-`GAME10|u8:<highscore_type>|u8:<length in bytes>|u8x:<game_name>`.  
+`GAME10|u8:<highscore_type>|u8:<length in bytes>|u8x:<game_name>|u32:<max_number_of_entries>`.  
 It returns a token referencing the added (or existing) game:  
 `TOKN10|u8x:<512 bit hash of token>`.  
-It adds a unique game entry into the game table of the database of the server. This entry consists of name of the game, type of high score (number: `0` or time: `1`), generated token, name of the table holding the high score information per user and time of creation. The table name is in the form `u32:<table_number>|-|<u8x:first 16 bytes of game_name padded with #>`. The timestamp is in the form `YYYY-MM-DD HH:MM:SS`.  
-The maximum length of the name of the game is 256 bytes. Longer names are cut off.
+It adds a unique game entry into the game table of the server's database. The entry consists of name of the game, type of high score (number: `0` or time: `1`), generated token, name of the table holding the high score information per user, maximum number of entries (`0` means unlimited) and time of creation. The table name is in the form `u32:<table_number>|-|<u8x:first 16 bytes of game_name padded with #>`. The timestamp is in the form `YYYY-MM-DD HH:MM:SS`.  
+The maximum length of the name of the game is 256 bytes. Longer names are cut off.  
+Be aware that using `0` for the number of maximum entries is dangerous because the database can overflow and block the server machine.
 
 ### Remove a game
 This has to be done with the `RVGA10` command:  
@@ -41,11 +43,18 @@ Error token not found: `STAT10|001`.
 ### List games
 This has to be done with the `LIST10` command:  
 `LIST10|GAME`.  
-This returns a list of all game information:  
-`u32:<number_of_games>|`  
-`u8x:<512 bit hash of token>|u8:<highscore_type>|u8:<length in bytes>|u8x:<game_name>|u32:<table_number>|u8x:<16 chars of game table name>|u8x:<timestamp of creation>|`  
-`...`.  
-So this can be either `0` if no games exist yet or any number of games followed by the specific game information.
+This returns a list of all game information as a stream:  
+The number of all game entries first:  
+`u32:<number_of_games>|\`  
+For each game entry:  
+`u8x:<512 bit hash of token>|\`  
+`u8:<highscore_type>|\`  
+`u8:<length in bytes>|u8x:<game_name>|\`  
+`u32:<table_number>|u8x:<16 chars of game table name>|\`  
+`u32:<max_number_of_entries>|\`  
+`u8x:<timestamp of creation>|`  
+If the number of games is `0` the stream ends with this information.  
+For description of each entry see [Add a game](https://github.com/FlauschBert/scored#add-a-game).  
 
 # Communication between client and server
 All communication between the two is done via TCP/IP. The information (commands) has to be sent symmetrically encrypted with a secret session key negotiated with Diffie-Hellmann key exchange which is also part of the TweetNaCl library.
@@ -57,23 +66,23 @@ If a malformed command is sent to the server the error is returned:
 ## Client authentication
 ### User and password
 #### Initial authentication and token generation
-Before any high score information can be sent to the server the client has to authenticate with a unique user and password.  
+Before any high score information can be sent to the server the client has to authenticate with user and password.  
 This has to be done with the `AUTH10` command followed by username and hashed password:  
 `AUTH10|u8x:<512 bit hash of password>|u8:<length in bytes>|u8x:<username>`.
 
 The answer is a unique token generated out of user, password and random information:  
 `TOKN10|u8x:<512 bit hash of token>`.  
-The token can be generated only once for a given user. If the user sends the same username and password hash combination as before the token once generated is returned again.  
+A new token can be generated only once for a given user. If the user sends the same username and password hash combination again the token once generated is returned.  
 If the same user tries to generate a token again with another password hash the command is rejected with the error:  
-`STAT10|003`.  
+Error auth request rejected: `STAT10|003`.  
 The maximum length of the name of the username is 256 bytes. Longer names are cut off.
 
 For all later operations the token is used. The token should be saved by the client and used for all operations.
 
-A token can be created (initially or by removal and recreation) or retrieved only all 15 minutes by the client to avoid flooding the database with new entries and to avoid hitting a used password with brute force checks. The client is identified by the IP address (peer). If the timeout is underrun the error is returned:  
+A token can be created (initially or by removal and recreation) or retrieved only all 15 minutes by the client to avoid flooding the database with new entries and to avoid hitting a used password with brute force attacks. The client is identified by the IP address (peer). If the timeout is underrun the error is returned:  
 Error timeout underrun: `STAT10|002`.
 
-The server allows only a certain command queue depth at once to avoid flooding the memory. If the command queue depth is too deep the stream is simply dropped instantly. It would be the same as if the connection gets broken.
+The server allows only a certain command queue depth at once to avoid flooding the memory. If the command queue depth is too deep the stream is dropped instantly. For the client it behaves the same as if the connection gets broken.
 
 #### Changing the password
 If the client wants to change the password of a user the command `RETH10` has to be used:  
