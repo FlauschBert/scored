@@ -10,7 +10,7 @@ This project consists of the server **scored**, a daemon or service. High-score 
 Games can be managed via **command line tool**. It connects locally to the server.  
 In the game client high-score can be managed with a library or crate named **libscored**.
 
-# Used cryptographic library'n'f
+# Used cryptographic library'n'stuff
 The idea came to me while I was thinking about high-score for my little games (still in development) and when I stumbled upon TweetNaCl: https://tweetnacl.cr.yp.to/index.html. It is a minimalist and safe cryptographic library and delivers all needed functionality for this project. The other thing was that I wanted to use the programming language Rust. The language is known to ensure at compile time that the compiled program is free of memory leaks and data races. Good for the stability of the server.
 
 # Notation
