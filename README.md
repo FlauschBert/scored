@@ -6,7 +6,7 @@
 So what is this all about? Did you ever want to safely manage high-score of a game for all users? On the one hand saving the score and on the other hand showing the high-score to everyone. So this is it.
 
 # Overview
-This project consists of the server **scored**, a daemon or service. High-score can be saved via data stream. Retrieved via data stream or html. User authentication via login, password and token is supported.  
+This project consists of the server **scored**, a daemon or service. High-score can be saved via data stream. Retrieved via data stream or HTML. User authentication via login, password and token is supported.  
 Games can be managed via **command line tool**. It connects locally to the server.  
 In the game client high-score can be managed with a library or crate named **libscored**.
 
@@ -15,8 +15,8 @@ The idea came to me while I was thinking about high-score for my little games (s
 
 # Notation
 `|` is simply a separator and not an optional.  
-`u8` or `u32` is one of these datatypes sent.  
-`u8x` is several of these datatypes sent.  
+`u8` or `u32` is one of these data types sent.  
+`u8x` is several of these data types sent.  
 `\` should be in the same line but didn't fit
 
 # Communication between command line tool and server
