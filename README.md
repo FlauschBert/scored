@@ -77,7 +77,8 @@ The answer is a unique token generated out of user, password and random informat
 A new token can be generated only once for a given user. If the user sends the same username and password hash combination again the token once generated is returned.  
 If the same user tries to generate a token again with another password hash the command is rejected with the error:  
 Error authentication request rejected: `STAT10|004`.  
-The maximum length of the name of the username is 256 bytes. Longer names are cut off.
+The maximum length of the username is 256 bytes. Longer names are cut off.
+The encoding of the username is UTF-8.  
 
 For all later operations the token is used. The token should be saved by the client and used for all operations.
 
@@ -111,7 +112,7 @@ Error timeout underrun: `STAT10|002`.
 Error timeout exceeded: `STAT10|003`.
 
 #### Changing the username
-This is not allowed. The user with high-score has to stay the same all the time (in an optimum way). Authenticated user and username are exactly the same and are shown in the list of high-score as is. The encoding of the username has to be UTF-8.
+This is not allowed. The user with high-score has to stay the same all the time (in an optimum way). Authenticated user and username are exactly the same and are shown in the list of high-score as is.
 
 #### Token lifetime
 Each token generated for username and hashed password combination has a fixed lifetime of 10 minutes. After this time a new token needs to be retrieved from the server with the `AUTH10` command.
